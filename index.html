@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sarah Flohic · Mon Univers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    function switchTab(name, btnEl) {
+      var views = document.querySelectorAll('.section-view');
+      for (var i = 0; i < views.length; i++) { views[i].classList.remove('active'); }
+      var btns = document.querySelectorAll('.tab-btn');
+      for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
+      var target = document.getElementById('tab-' + name);
+      if (target) { target.classList.add('active'); }
+      if (btnEl) { btnEl.classList.add('active'); }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg-sand: #F8F5F0; --card-bg: #FFFFFF; --ink: #1E3342; --ink-soft: #526777;
+      --blue-soft: #D9E6EF; --blue-deep: #2B5470; --mustard: #D8A94E; --mustard-soft: #F7EEDB;
+      --pink-powder: #F4E1E4; --pink-deep: #9E5866; --sage: #D8E6DF; --sage-deep: #2E644C;
+      --border: #E8E1D7; --radius: 18px; --shadow: 0 8px 24px rgba(30, 51, 66, 0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-sand); color: var(--ink); line-height: 1.55; padding-bottom: 60px; }
+    h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; }
+    header { background: linear-gradient(135deg, #FFFFFF 0%, #F3ECE2 100%); border-bottom: 1px solid var(--border); padding: 20px 24px 16px; position: sticky; top: 0; z-index: 50; }
+    .header-inner { max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-badge { width: 44px; height: 44px; border-radius: 14px; background: var(--blue-deep); color: #FFF; display: grid; place-items: center; font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; }
+    .brand h1 { font-size: 26px; line-height: 1.1; }
+    .brand p { font-size: 12.5px; color: var(--ink-soft); }
+    .sync-pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; background: #FFF; border: 1px solid var(--border); font-size: 12.5px; font-weight: 600; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #38A169; }
+    .dot.saving { background: var(--mustard); }
+    .dot.error { background: #E53E3E; }
+    nav.tabs { max-width: 1180px; margin: 14px auto 0; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .tab-btn { border: 1px solid var(--border); background: #FFF; color: var(--ink); padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .tab-btn:hover { background: var(--blue-soft); }
+    .tab-btn.active { background: var(--ink); color: #FFF; border-color: var(--ink); }
+    main { max-width: 1180px; margin: 24px auto; padding: 0 20px; }
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 22px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 22px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .card-title { font-size: 21px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+    .b-blue { background: var(--blue-soft); color: var(--blue-deep); }
+    .b-mustard { background: var(--mustard-soft); color: #8A6114; }
+    .b-pink { background: var(--pink-powder); color: var(--pink-deep); }
+    .b-sage { background: var(--sage); color: var(--sage-deep); }
+    .btn { border: none; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-primary { background: var(--blue-deep); color: #FFF; }
+    .btn-danger { background: #FDE8E8; color: #9B1C1C; padding: 4px 9px; font-size: 12px; }
+    input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 11px; font-family: inherit; font-size: 13.5px; color: var(--ink); background: #FCFBF9; }
+    textarea { min-height: 85px; resize: vertical; }
+    .item-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #FCFBF9; border: 1px solid #EFEAE2; margin-bottom: 8px; }
+    .item-row.done { opacity: 0.6; text-decoration: line-through; }
+    .item-main { flex: 1; }
+    .item-sub { font-size: 12px; color: var(--ink-soft); }
+    .links-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .quick-link { text-decoration: none; background: #FFF; border: 1px solid var(--border); color: var(--ink); padding: 9px 15px; border-radius: 13px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+    .quick-link:hover { background: var(--mustard-soft); border-color: var(--mustard); }
+    .progress-wrap { background: #EDE7DD; border-radius: 999px; height: 14px; overflow: hidden; margin: 10px 0; }
+    .progress-fill { background: linear-gradient(90deg, var(--blue-deep), var(--mustard)); height: 100%; transition: width 0.3s ease; }
+    details.phase-box { border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; margin-bottom: 12px; background: #FCFBF9; }
+    details.phase-box summary { font-weight: 700; cursor: pointer; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
+    th { font-size: 12px; text-transform: uppercase; color: var(--ink-soft); background: #FAF7F2; }
+    .inline-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .inline-form > * { flex: 1 1 160px; }
+    .inline-form button { flex: 0 0 auto; }
+    .kpi-box { background: var(--bg-sand); border-radius: 14px; padding: 14px; text-align: center; border: 1px solid var(--border); }
+    .kpi-val { font-size: 24px; font-weight: 700; color: var(--blue-deep); }
+    .kpi-lbl { font-size: 12px; color: var(--ink-soft); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-badge">SF</div>
+      <div>
+        <h1>Sarah Flohic · Mon Univers</h1>
+        <p>Accompagnement CAURI · Mairie Saint-Molf · Graphisme EDAA · Vie Perso</p>
+      </div>
+    </div>
+    <div class="sync-pill">
+      <span class="dot" id="syncDot"></span>
+      <span id="syncText">Prêt</span>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button type="button" class="tab-btn active" onclick="switchTab('accueil', this)">☀️ Mon Tableau de Bord</button>
+    <button type="button" class="tab-btn" onclick="switchTab('pro', this)">🤝 Pro · CESU & CAURI</button>
+    <button type="button" class="tab-btn" onclick="switchTab('mairie', this)">🏛️ Mairie Saint-Molf</button>
+    <button type="button" class="tab-btn" onclick="switchTab('formations', this)">🎨 Formations & Projets</button>
+    <button type="button" class="tab-btn" onclick="switchTab('com', this)">📣 Studio Com'</button>
+    <button type="button" class="tab-btn" onclick="switchTab('perso', this)">🌿 Perso & Envies</button>
+  </nav>
+</header>
+
+<main>
+  <section id="tab-accueil" class="section-view active">
+    <div class="links-row">
+      <a class="quick-link" href="https://calendar.google.com" target="_blank">📅 Google Agenda</a>
+      <a class="quick-link" href="https://drive.google.com" target="_blank">📁 Google Drive</a>
+      <a class="quick-link" href="https://www.cesu.urssaf.fr" target="_blank">💼 Portail CESU Urssaf</a>
+      <a class="quick-link" href="https://www.edaa.fr" target="_blank">🎨 Espace Élève EDAA</a>
+      <a class="quick-link" href="https://cauri-services.fr" target="_blank">🌿 Site CAURI Services</a>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">📌 Priorités du moment</h2><span class="badge b-mustard">Focus</span></div>
+        <div id="homeTasksList"></div>
+        <div class="inline-form">
+          <input type="text" id="newHomeTask" placeholder="Ajouter une priorité...">
+          <select id="newHomeCat"><option value="Pro">Pro</option><option value="Mairie">Mairie</option><option value="EDAA">EDAA</option><option value="Perso">Perso</option></select>
+          <button type="button" class="btn btn-primary" onclick="addTask()">+</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">📊 Aperçu en un clin d'œil</h2></div>
+        <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+          <div class="kpi-box"><div class="kpi-val" id="kpiClients">4</div><div class="kpi-lbl">Bénéficiaires actifs</div></div>
+          <div class="kpi-box"><div class="kpi-val" id="kpiPresc">11</div><div class="kpi-lbl">Prescripteurs suivis</div></div>
+          <div class="kpi-box"><div class="kpi-val" id="kpiEdaa">0%</div><div class="kpi-lbl">Avancement EDAA</div></div>
+          <div class="kpi-box"><div class="kpi-val" id="kpiCa">0 €</div><div class="kpi-lbl">CA enregistré</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">📝 Bloc-notes libre</h2><span class="badge b-blue">Auto-enregistré</span></div>
+        <textarea id="quickScratchpad" placeholder="Idées volantes, mémo téléphone, courses..." oninput="updateTextField('scratchpad', this.value)"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-pro" class="section-view">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">💛 Mes Bénéficiaires (CESU)</h2><span class="badge b-sage">Presqu'île Guérandaise</span></div>
+        <div id="clientsList"></div>
+        <div class="inline-form">
+          <input type="text" id="newClientName" placeholder="Nom & Prénom">
+          <input type="text" id="newClientInfo" placeholder="Commune / Rythme / Besoins">
+          <button type="button" class="btn btn-primary" onclick="addClient()">Ajouter</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">💶 Suivi Comptabilité & CESU</h2><span class="badge b-mustard">Recettes</span></div>
+        <div id="comptaList"></div>
+        <div class="inline-form">
+          <input type="text" id="newComptaLabel" placeholder="Mois / Libellé (ex: Nov 2026 - CESU)">
+          <input type="number" id="newComptaAmount" placeholder="Montant €">
+          <button type="button" class="btn btn-primary" onclick="addCompta()">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">🤝 Réseau & 11 Prescripteurs Locaux</h2><span class="badge b-blue">Saint-Molf · Guérande · Saint-Nazaire</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Structure / Contact</th><th>Secteur</th><th>Statut</th><th>Note / Prochaine relance</th><th></th></tr></thead>
+          <tbody id="prescribersTable"></tbody>
+        </table>
+      </div>
+      <div class="inline-form">
+        <input type="text" id="newPrescName" placeholder="Nom structure ou contact">
+        <input type="text" id="newPrescCity" placeholder="Ville">
+        <select id="newPrescStatus"><option value="À contacter">À contacter</option><option value="Rencontré">Rencontré</option><option value="À relancer">À relancer</option><option value="Partenaire actif">Partenaire actif</option></select>
+        <input type="text" id="newPrescNote" placeholder="Note / Suivi">
+        <button type="button" class="btn btn-primary" onclick="addPrescriber()">+ Prescripteur</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-mairie" class="section-view">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">🏛️ Mandat Conseillère Municipale</h2><span class="badge b-blue">Saint-Molf · 2026–2032</span></div>
+        <textarea id="mairieNotes" style="min-height:160px;" placeholder="Notes de commissions, points à aborder..." oninput="updateTextField('mairieNotes', this.value)"></textarea>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">📋 Dossiers & Réunions Mairie</h2><span class="badge b-mustard">Actions</span></div>
+        <div id="mairieList"></div>
+        <div class="inline-form">
+          <input type="text" id="newMairieTitle" placeholder="Commission / Sujet de réunion">
+          <input type="text" id="newMairieDate" placeholder="Date / Échéance">
+          <button type="button" class="btn btn-primary" onclick="addMairieItem()">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-formations" class="section-view">
+    <div class="card">
+      <div class="card-header">
+        <div><h2 class="card-title">🎨 Formation Graphiste · EDAA</h2><p class="item-sub">23 cours · 26 devoirs indispensables · 2 stages en graphisme</p></div>
+        <span class="badge b-pink" id="edaaBadge">0 / 49 validés</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-fill" id="edaaProgressBar" style="width:0%"></div></div>
+      <div id="edaaPhasesContainer" style="margin-top:16px;"></div>
+      <div class="grid-2" style="margin-top:18px; margin-bottom:0;">
+        <div><h3 style="font-size:18px; margin-bottom:8px;">🎓 Mes 2 Stages en Graphisme</h3><textarea id="edaaStagesNotes" oninput="updateEdaaField('stagesNotes', this.value)"></textarea></div>
+        <div><h3 style="font-size:18px; margin-bottom:8px;">📝 Mes notes de cours & astuces</h3><textarea id="edaaCourseNotes" oninput="updateEdaaField('courseNotes', this.value)"></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">🎓 Projet Formatrice d'Adultes (Automne 2027)</h2><span class="badge b-sage">Titre FPA · RNCP 37275</span></div>
+      <textarea id="fpaNotes" oninput="updateTextField('fpaNotes', this.value)"></textarea>
+    </div>
+  </section>
+
+  <section id="tab-com" class="section-view">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📣 Studio de Communication</h2>
+        <select id="comFilter" style="width:auto;" onchange="renderCom()"><option value="Tous">Tous les univers</option><option value="CAURI">🌿 CAURI Accompagnement</option><option value="Graphisme">🎨 Graphisme EDAA</option><option value="Formation">🎓 Formation / Pédagogie</option></select>
+      </div>
+      <div class="inline-form" style="margin-bottom:18px;">
+        <input type="text" id="newComTitle" placeholder="Idée de post ou sujet...">
+        <select id="newComTheme"><option value="CAURI">🌿 CAURI Accompagnement</option><option value="Graphisme">🎨 Graphisme EDAA</option><option value="Formation">🎓 Formation / Pédagogie</option></select>
+        <select id="newComNetwork"><option value="LinkedIn">LinkedIn</option><option value="Facebook Pro">Facebook Pro</option><option value="Site Web">Site Web</option></select>
+        <select id="newComStatus"><option value="Idée">💡 Idée</option><option value="Brouillon prêt">✍️ Brouillon prêt</option><option value="Publié">✅ Publié</option></select>
+        <button type="button" class="btn btn-primary" onclick="addComPost()">Ajouter</button>
+      </div>
+      <div id="comPostsList"></div>
+    </div>
+  </section>
+
+  <section id="tab-perso" class="section-view">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">🎄 Ma Wishlist de Noël 2026</h2><span class="badge b-pink">Par priorité</span></div>
+        <div id="wishlistContainer"></div>
+        <div class="inline-form">
+          <input type="text" id="newWishTitle" placeholder="Nouvelle envie / cadeau...">
+          <input type="text" id="newWishBrand" placeholder="Marque / Lien / Détail">
+          <button type="button" class="btn btn-primary" onclick="addWish()">Ajouter</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">🚐 Projet Camion Aménagé</h2><span class="badge b-mustard">Ça m'inspire</span></div>
+        <p style="font-size:13px; color:var(--ink-soft); margin-bottom:10px;"><strong>Repères :</strong> Le Van Migrateur, Mon Fourgon Aménagé, Vancore, Hanroad, Vanlife France, Casambu, Les Wheelers.</p>
+        <textarea id="vanNotes" style="min-height:130px;" oninput="updateTextField('vanNotes', this.value)"></textarea>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-header"><h2 class="card-title">🎂 Mes 30 ans & Événements Perso</h2><span class="badge b-blue">Moments doux</span></div><textarea id="birthdayNotes" oninput="updateTextField('birthdayNotes', this.value)"></textarea></div>
+      <div class="card"><div class="card-header"><h2 class="card-title">☕ Bien-être, Balades & Adresses</h2><span class="badge b-sage">Presqu'île & Nature</span></div><textarea id="wellbeingNotes" oninput="updateTextField('wellbeingNotes', this.value)"></textarea></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://rncnabnonouanpyxlnzu.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_282FOZEhMrRK5C4NsEkMRQ_TaKjbWFE';
+  const ROW_ID = 'sarah_univers_v1';
+  let supabaseClient = null;
+  try { if (window.supabase) { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } } catch (e) {}
+
+  const DEFAULT_DATA = {
+    scratchpad: "Bienvenue dans ton espace Sarah Flohic · Mon Univers ! Tout est sauvegardé automatiquement.",
+    tasks: [
+      { id: 1, text: "Reprendre cours EDAA : Les bases de la présentation & Le logotype", cat: "EDAA", done: false },
+      { id: 2, text: "Corriger et renvoyer devoir GRA1-01 · Représenter des émotions (11/20)", cat: "EDAA", done: false },
+      { id: 3, text: "Poursuivre recherche de 1er stage graphisme secteur La Baule / Guérande", cat: "EDAA", done: false },
+      { id: 4, text: "Suivi dossiers et prochaines commissions Mairie Saint-Molf", cat: "Mairie", done: false }
+    ],
+    clients: [
+      { id: 1, name: "Bernard Guichet", info: "Accompagnement personnalisé à domicile · CESU" },
+      { id: 2, name: "Jeanne Moujon", info: "Accompagnement personnalisé à domicile · CESU" },
+      { id: 3, name: "Chantal Blanchard", info: "Accompagnement personnalisé à domicile · CESU" },
+      { id: 4, name: "Christiane Delorme", info: "Accompagnement personnalisé à domicile · CESU" }
+    ],
+    compta: [{ id: 1, label: "Novembre 2026 · Interventions CESU", amount: 0 }],
+    prescribers: [
+      { id: 1, name: "CCAS de Saint-Molf", city: "Saint-Molf", status: "Partenaire actif", note: "Lien proximité commune" },
+      { id: 2, name: "CCAS de Guérande", city: "Guérande", status: "À relancer", note: "Présenter plaquette CAURI" },
+      { id: 3, name: "CLIC Presqu'île Guérandaise", city: "Guérande", status: "Rencontré", note: "Coordination autonomie" },
+      { id: 4, name: "Cabinet Infirmier Saint-Molf", city: "Saint-Molf", status: "Partenaire actif", note: "Relais retour hospitalisation" },
+      { id: 5, name: "Pharmacie de Saint-Molf", city: "Saint-Molf", status: "Rencontré", note: "Dépôt cartes de visite" },
+      { id: 6, name: "Maison de Santé Guérande", city: "Guérande", status: "À contacter", note: "Médecins généralistes & IDEL" },
+      { id: 7, name: "Kinésithérapeutes Presqu'île", city: "Guérande", status: "À contacter", note: "Suivi post-hospitalisation" },
+      { id: 8, name: "Hôpital Intercommunal (Service Social)", city: "Guérande", status: "À contacter", note: "Sorties d'hospitalisation" },
+      { id: 9, name: "Centre Hospitalier Saint-Nazaire", city: "Saint-Nazaire", status: "À contacter", note: "Équipe mobile gériatrie" },
+      { id: 10, name: "France Alzheimer 44", city: "Saint-Nazaire", status: "Rencontré", note: "Accompagnement aidants" },
+      { id: 11, name: "Réseau SIZAO / Entrepreneurs Locaux", city: "Pornic / Guérande", status: "Partenaire actif", note: "Contacts Jonathan Ubeda & Joëlle Petoux" }
+    ],
+    mairieNotes: "Commissions municipales Saint-Molf (mandat 2026-2032) :\n- Action sociale, solidarité et lien intergénérationnel\n- Vie associative et communication",
+    mairieItems: [
+      { id: 1, title: "Préparation prochain Conseil Municipal", date: "À planifier", done: false },
+      { id: 2, title: "Réunion commission communale", date: "Novembre 2026", done: false }
+    ],
+    edaa: {
+      stagesNotes: "Stage 1 : En recherche (La Baule / Guérande / Saint-Nazaire).\nStage 2 : À préparer après le 1er stage.",
+      courseNotes: "À reprendre en priorité en Phase 1 :\n- Cours : Les bases de la présentation (69 min) & Le logotype (31 min)\n- Devoir GRA1-01 : Représenter des émotions (11/20 -> à refaire)",
+      items: [
+        { id: "p1c1", phase: "Phase 1 · Les fondamentaux", type: "Cours", code: "", title: "Guide méthodologique – Bien débuter (28 min)", status: "Validé", note: "" },
+        { id: "p1c2", phase: "Phase 1 · Les fondamentaux", type: "Cours", code: "", title: "Le graphisme, métiers et champs d'application (36 min)", status: "Validé", note: "" },
+        { id: "p1c3", phase: "Phase 1 · Les fondamentaux", type: "Cours", code: "", title: "Les bases de la présentation (69 min)", status: "À revoir", note: "" },
+        { id: "p1c4", phase: "Phase 1 · Les fondamentaux", type: "Cours", code: "", title: "Croquis et perspective (124 min)", status: "Validé", note: "" },
+        { id: "p1c5", phase: "Phase 1 · Les fondamentaux", type: "Cours", code: "", title: "Comprendre et utiliser la couleur (79 min)", status: "Validé", note: "" },
+        { id: "p1c6", phase: "Phase 1 · Les fondamentaux", type: "Cours", code: "", title: "Concept, créativité et méthodologie (44 min)", status: "Validé", note: "" },
+        { id: "p1c7", phase: "Phase 1 · Les fondamentaux", type: "Cours", code: "", title: "Concept, créativité et méthodologie : le logotype (31 min)", status: "À revoir", note: "" },
+        { id: "p1d1", phase: "Phase 1 · Les fondamentaux", type: "Devoir", code: "GRA1-01", title: "Représenter des émotions", status: "À refaire", note: "11/20" },
+        { id: "p1d2", phase: "Phase 1 · Les fondamentaux", type: "Devoir", code: "GRA1-02", title: "Formes et couleurs", status: "À faire", note: "" },
+        { id: "p1d3", phase: "Phase 1 · Les fondamentaux", type: "Devoir", code: "GRA1-03", title: "Une recherche et une affiche", status: "À faire", note: "" },
+        { id: "p1d4", phase: "Phase 1 · Les fondamentaux", type: "Devoir", code: "GRA1-04", title: "Réaliser un brainstorming", status: "À faire", note: "" },
+        { id: "p1d5", phase: "Phase 1 · Les fondamentaux", type: "Devoir", code: "GRA1-05", title: "Réaliser une planche d'inspiration", status: "À faire", note: "" },
+        { id: "p1d6", phase: "Phase 1 · Les fondamentaux", type: "Devoir", code: "GRA1-06A", title: "Une identité visuelle – Étape 1", status: "À faire", note: "" },
+        { id: "p1d7", phase: "Phase 1 · Les fondamentaux", type: "Devoir", code: "GRA1-06B", title: "Une identité visuelle – Étape 2", status: "À faire", note: "" },
+        { id: "p2c1", phase: "Phase 2 · Approfondissement", type: "Cours", code: "", title: "La chaîne graphique (41 min)", status: "À faire", note: "" },
+        { id: "p2c2", phase: "Phase 2 · Approfondissement", type: "Cours", code: "", title: "Maquette et composition (152 min)", status: "À faire", note: "" },
+        { id: "p2c3", phase: "Phase 2 · Approfondissement", type: "Cours", code: "", title: "Histoire et actualité du design graphique (49 min)", status: "À faire", note: "" },
+        { id: "p2c4", phase: "Phase 2 · Approfondissement", type: "Cours", code: "", title: "Typographie (23 min)", status: "À faire", note: "" },
+        { id: "p2c5", phase: "Phase 2 · Approfondissement", type: "Cours", code: "", title: "Notions de sémiologie (31 min)", status: "À faire", note: "" },
+        { id: "p2c6", phase: "Phase 2 · Approfondissement", type: "Cours", code: "", title: "Informatique appliquée : Photoshop (668 min)", status: "À faire", note: "" },
+        { id: "p2c7", phase: "Phase 2 · Approfondissement", type: "Cours", code: "", title: "Tuto : la création d'une affiche avec Photoshop (114 min)", status: "À faire", note: "" },
+        { id: "p2d1", phase: "Phase 2 · Approfondissement", type: "Devoir", code: "GRA2-01", title: "Mais que fait-il là ?", status: "À faire", note: "" },
+        { id: "p2d2", phase: "Phase 2 · Approfondissement", type: "Devoir", code: "GRA2-02", title: "L'affiche de la fête des fleurs", status: "À faire", note: "" },
+        { id: "p2d3", phase: "Phase 2 · Approfondissement", type: "Devoir", code: "GRA2-03", title: "Des mots en typographies", status: "À faire", note: "" },
+        { id: "p2d4", phase: "Phase 2 · Approfondissement", type: "Devoir", code: "GRA2-04", title: "Présenter un créateur", status: "À faire", note: "" },
+        { id: "p2d5", phase: "Phase 2 · Approfondissement", type: "Devoir", code: "GRA2-05A", title: "L'identité du musée de la magie – Étape 1", status: "À faire", note: "" },
+        { id: "p2d6", phase: "Phase 2 · Approfondissement", type: "Devoir", code: "GRA2-05B", title: "L'identité du musée de la magie – Étape 2", status: "À faire", note: "" },
+        { id: "p3c1", phase: "Phase 3 · Perfectionnement", type: "Cours", code: "", title: "Gestion de projets graphiques (46 min)", status: "À faire", note: "" },
+        { id: "p3c2", phase: "Phase 3 · Perfectionnement", type: "Cours", code: "", title: "Informatique appliquée : Illustrator (676 min)", status: "À faire", note: "" },
+        { id: "p3c3", phase: "Phase 3 · Perfectionnement", type: "Cours", code: "", title: "Informatique appliquée : InDesign (538 min)", status: "À faire", note: "" },
+        { id: "p3c4", phase: "Phase 3 · Perfectionnement", type: "Cours", code: "", title: "La mise en page d'un conte avec InDesign (144 min)", status: "À faire", note: "" },
+        { id: "p3c5", phase: "Phase 3 · Perfectionnement", type: "Cours", code: "", title: "Techniques de rendu et de présentation (108 min)", status: "À faire", note: "" },
+        { id: "p3c6", phase: "Phase 3 · Perfectionnement", type: "Cours", code: "", title: "L'utilisation de l'IA dans les métiers du graphisme (175 min)", status: "À faire", note: "" },
+        { id: "p3d1", phase: "Phase 3 · Perfectionnement", type: "Devoir", code: "GRA3-01", title: "Réaliser un carton d'exposition", status: "À faire", note: "" },
+        { id: "p3d2", phase: "Phase 3 · Perfectionnement", type: "Devoir", code: "GRA3-02", title: "Trois pictogrammes et une affichette", status: "À faire", note: "" },
+        { id: "p3d3", phase: "Phase 3 · Perfectionnement", type: "Devoir", code: "GRA3-03", title: "Illustrer un poème à la manière de...", status: "À faire", note: "" },
+        { id: "p3d4", phase: "Phase 3 · Perfectionnement", type: "Devoir", code: "GRA3-04A", title: "Mise en page d'un livre – Étape 1", status: "À faire", note: "" },
+        { id: "p3d5", phase: "Phase 3 · Perfectionnement", type: "Devoir", code: "GRA3-04B", title: "Mise en page d'un livre – Étape 2", status: "À faire", note: "" },
+        { id: "p3d6", phase: "Phase 3 · Perfectionnement", type: "Devoir", code: "GRA3-04C", title: "Mise en page d'un livre – Étape 3", status: "À faire", note: "" },
+        { id: "p4c1", phase: "Phase 4 · Professionnalisation", type: "Cours", code: "", title: "Devenir graphiste professionnel (81 min)", status: "À faire", note: "" },
+        { id: "p4c2", phase: "Phase 4 · Professionnalisation", type: "Cours", code: "", title: "Créer son book (123 min)", status: "À faire", note: "" },
+        { id: "p4c3", phase: "Phase 4 · Professionnalisation", type: "Cours", code: "", title: "Focus pro : le packaging", status: "À faire", note: "" },
+        { id: "p4d1", phase: "Phase 4 · Professionnalisation", type: "Devoir", code: "GRA4-01", title: "Concevoir votre identité visuelle", status: "À faire", note: "" },
+        { id: "p4d2", phase: "Phase 4 · Professionnalisation", type: "Devoir", code: "GRA4-02A", title: "La charte graphique d'un site web – Étape 1", status: "À faire", note: "" },
+        { id: "p4d3", phase: "Phase 4 · Professionnalisation", type: "Devoir", code: "GRA4-02B", title: "La charte graphique d'un site web – Étape 2", status: "À faire", note: "" },
+        { id: "p4d4", phase: "Phase 4 · Professionnalisation", type: "Devoir", code: "GRA4-03A", title: "Projet personnel – Étape 1", status: "À faire", note: "" },
+        { id: "p4d5", phase: "Phase 4 · Professionnalisation", type: "Devoir", code: "GRA4-03B", title: "Projet personnel – Étape 2", status: "À faire", note: "" },
+        { id: "p4d6", phase: "Phase 4 · Professionnalisation", type: "Devoir", code: "GRA4-04", title: "Les documents pour se lancer", status: "À faire", note: "" },
+        { id: "p4d7", phase: "Phase 4 · Professionnalisation", type: "Devoir", code: "GRA4-05", title: "Le book", status: "À faire", note: "" }
+      ]
+    },
+    fpaNotes: "Objectif : formatrice ADVF / AVS / DEAES à l'automne 2027 (pistes h3O! Nantes / AFPA).",
+    comPosts: [
+      { id: 1, title: "Pourquoi je privilégie un accompagnement humain et sans chronomètre à domicile", theme: "CAURI", network: "LinkedIn", status: "Brouillon prêt" },
+      { id: 2, title: "Ma reconversion créative : ce que le graphisme apporte à mon regard d'accompagnante", theme: "Graphisme", network: "LinkedIn", status: "Idée" }
+    ],
+    wishlist: [
+      { id: 1, title: "1. 1 MILLION d'euros 💰💰💰", brand: "Priorité absolue !", done: false },
+      { id: 2, title: "2. Sac de voyage", brand: "The North Face Base Camp Duffel 32L ou 42L", done: false },
+      { id: 3, title: "3. Casque écouteur à conduction osseuse", brand: "Shokz OpenRun", done: false },
+      { id: 4, title: "4. Puzzle (500 à 1500 pièces) + tapis de puzzle", brand: "Trevell, Pieces & Peace, Galison, tapis Mozooson", done: false },
+      { id: 5, title: "5. Couvre-livre / pochette de liseuse", brand: "O Fil de Mimi, Aurea Créations ou Etsy", done: false },
+      { id: 6, title: "6. Bottes style cavalière cuir cognac", brand: "Éram / Nine West", done: false },
+      { id: 7, title: "7. Parfum Miss Dior Essence", brand: "Dior", done: false },
+      { id: 8, title: "8. Sèche-cheveux professionnel", brand: "Bellissima Numérique Ceramisonic", done: false },
+      { id: 9, title: "9. Extracteur de jus", brand: "H.Koenig GSX26 ou Nutribullet Slow Juicer", done: false },
+      { id: 10, title: "10. Brosse à dents électrique", brand: "Oral-B iO 5 Leopard + étui de voyage", done: false }
+    ],
+    vanNotes: "Bois chaleureux, zellige vert sauge, week-ends nature en liberté.",
+    birthdayNotes: "Préparatifs de mes 30 ans.",
+    wellbeingNotes: "Sentiers côtiers, Café des Loulous à La Baule, sport & nutrition."
+  };
+
+  let appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  let saveTimer = null;
+
+  function setSyncState(state, text) {
+    document.getElementById('syncDot').className = 'dot ' + (state === 'saving' ? 'saving' : state === 'error' ? 'error' : '');
+    document.getElementById('syncText').textContent = text;
+  }
+
+  async function loadFromSupabase() {
+    renderAll();
+    if (!supabaseClient) { setSyncState('error', 'Mode local'); return; }
+    try {
+      setSyncState('saving', 'Chargement...');
+      const { data, error } = await supabaseClient.from('univers_data').select('content').eq('id', ROW_ID).maybeSingle();
+      if (error) throw error;
+      if (data && data.content) { appData = { ...DEFAULT_DATA, ...data.content }; setSyncState('ok', 'Synchronisé · Coffre Supabase'); renderAll(); }
+      else { await saveToSupabase(true); }
+    } catch (e) { setSyncState('error', 'Mode local'); }
+  }
+
+  function triggerSave() { setSyncState('saving', 'Enregistrement...'); clearTimeout(saveTimer); saveTimer = setTimeout(() => saveToSupabase(false), 600); }
+  async function saveToSupabase(isInit) {
+    if (!supabaseClient) return;
+    try {
+      const { error } = await supabaseClient.from('univers_data').upsert({ id: ROW_ID, content: appData, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      setSyncState('ok', isInit ? 'Initialisé sur Supabase' : 'Sauvegardé');
+    } catch (e) { setSyncState('error', 'Erreur sauvegarde'); }
+  }
+
+  function renderAll() {
+    renderTasks(); renderClients(); renderCompta(); renderPrescribers(); renderMairie(); renderEdaa(); renderCom(); renderWishlist();
+    document.getElementById('quickScratchpad').value = appData.scratchpad || '';
+    document.getElementById('mairieNotes').value = appData.mairieNotes || '';
+    document.getElementById('fpaNotes').value = appData.fpaNotes || '';
+    document.getElementById('vanNotes').value = appData.vanNotes || '';
+    document.getElementById('birthdayNotes').value = appData.birthdayNotes || '';
+    document.getElementById('wellbeingNotes').value = appData.wellbeingNotes || '';
+    document.getElementById('edaaStagesNotes').value = appData.edaa.stagesNotes || '';
+    document.getElementById('edaaCourseNotes').value = appData.edaa.courseNotes || '';
+  }
+
+  function renderTasks() {
+    document.getElementById('homeTasksList').innerHTML = appData.tasks.map((t, i) => `
+      <div class="item-row ${t.done ? 'done' : ''}">
+        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="appData.tasks[${i}].done=!appData.tasks[${i}].done;renderTasks();triggerSave();">
+        <div class="item-main"><div>${t.text}</div><span class="badge b-blue">${t.cat}</span></div>
+        <button type="button" class="btn btn-danger" onclick="appData.tasks.splice(${i},1);renderTasks();triggerSave();">✕</button>
+      </div>`).join('');
+  }
+  function addTask() {
+    const txt = document.getElementById('newHomeTask').value.trim(); if (!txt) return;
+    appData.tasks.unshift({ id: Date.now(), text: txt, cat: document.getElementById('newHomeCat').value, done: false });
+    document.getElementById('newHomeTask').value = ''; renderTasks(); triggerSave();
+  }
+
+  function renderClients() {
+    document.getElementById('kpiClients').textContent = appData.clients.length;
+    document.getElementById('clientsList').innerHTML = appData.clients.map((c, i) => `
+      <div class="item-row"><div class="item-main"><strong>${c.name}</strong><div class="item-sub">${c.info}</div></div>
+      <button type="button" class="btn btn-danger" onclick="appData.clients.splice(${i},1);renderClients();triggerSave();">✕</button></div>`).join('');
+  }
+  function addClient() {
+    const name = document.getElementById('newClientName').value.trim(); if (!name) return;
+    appData.clients.push({ id: Date.now(), name, info: document.getElementById('newClientInfo').value.trim() || 'CESU' });
+    document.getElementById('newClientName').value = ''; document.getElementById('newClientInfo').value = ''; renderClients(); triggerSave();
+  }
+
+  function renderCompta() {
+    const total = appData.compta.reduce((s, x) => s + Number(x.amount || 0), 0);
+    document.getElementById('kpiCa').textContent = total.toLocaleString('fr-FR') + ' €';
+    document.getElementById('comptaList').innerHTML = appData.compta.map((c, i) => `
+      <div class="item-row"><div class="item-main">${c.label}</div><strong>${Number(c.amount).toLocaleString('fr-FR')} €</strong>
+      <button type="button" class="btn btn-danger" onclick="appData.compta.splice(${i},1);renderCompta();triggerSave();">✕</button></div>`).join('');
+  }
+  function addCompta() {
+    const label = document.getElementById('newComptaLabel').value.trim(); if (!label) return;
+    appData.compta.unshift({ id: Date.now(), label, amount: Number(document.getElementById('newComptaAmount').value) || 0 });
+    document.getElementById('newComptaLabel').value = ''; document.getElementById('newComptaAmount').value = ''; renderCompta(); triggerSave();
+  }
+
+  function renderPrescribers() {
+    document.getElementById('kpiPresc').textContent = appData.prescribers.length;
+    document.getElementById('prescribersTable').innerHTML = appData.prescribers.map((p, i) => `
+      <tr><td><strong>${p.name}</strong></td><td>${p.city}</td>
+      <td><select onchange="appData.prescribers[${i}].status=this.value;triggerSave();">
+      ${['À contacter','Rencontré','À relancer','Partenaire actif'].map(st => `<option value="${st}" ${p.status === st ? 'selected' : ''}>${st}</option>`).join('')}
+      </select></td>
+      <td><input type="text" value="${p.note || ''}" onchange="appData.prescribers[${i}].note=this.value;triggerSave();"></td>
+      <td><button type="button" class="btn btn-danger" onclick="appData.prescribers.splice(${i},1);renderPrescribers();triggerSave();">✕</button></td></tr>`).join('');
+  }
+  function addPrescriber() {
+    const name = document.getElementById('newPrescName').value.trim(); if (!name) return;
+    appData.prescribers.push({ id: Date.now(), name, city: document.getElementById('newPrescCity').value.trim(), status: document.getElementById('newPrescStatus').value, note: document.getElementById('newPrescNote').value.trim() });
+    document.getElementById('newPrescName').value = ''; document.getElementById('newPrescCity').value = ''; document.getElementById('newPrescNote').value = ''; renderPrescribers(); triggerSave();
+  }
+
+  function renderMairie() {
+    document.getElementById('mairieList').innerHTML = appData.mairieItems.map((m, i) => `
+      <div class="item-row ${m.done ? 'done' : ''}">
+        <input type="checkbox" ${m.done ? 'checked' : ''} onchange="appData.mairieItems[${i}].done=!appData.mairieItems[${i}].done;renderMairie();triggerSave();">
+        <div class="item-main"><div>${m.title}</div><div class="item-sub">${m.date}</div></div>
+        <button type="button" class="btn btn-danger" onclick="appData.mairieItems.splice(${i},1);renderMairie();triggerSave();">✕</button>
+      </div>`).join('');
+  }
+  function addMairieItem() {
+    const title = document.getElementById('newMairieTitle').value.trim(); if (!title) return;
+    appData.mairieItems.unshift({ id: Date.now(), title, date: document.getElementById('newMairieDate').value.trim(), done: false });
+    document.getElementById('newMairieTitle').value = ''; document.getElementById('newMairieDate').value = ''; renderMairie(); triggerSave();
+  }
+
+  function renderEdaa() {
+    const items = appData.edaa.items;
+    const valid = items.filter(x => x.status === 'Validé').length;
+    const pct = Math.round((valid / items.length) * 100);
+    document.getElementById('kpiEdaa').textContent = pct + '%';
+    document.getElementById('edaaBadge').textContent = `${valid} / ${items.length} validés (${pct}%)`;
+    document.getElementById('edaaProgressBar').style.width = pct + '%';
+    const phases = [...new Set(items.map(x => x.phase))];
+    document.getElementById('edaaPhasesContainer').innerHTML = phases.map((ph, idx) => {
+      const phItems = items.filter(x => x.phase === ph);
+      const phDone = phItems.filter(x => x.status === 'Validé').length;
+      return `<details class="phase-box" ${idx === 0 ? 'open' : ''}><summary><span>${ph}</span><span class="badge b-blue">${phDone} / ${phItems.length}</span></summary><div style="margin-top:12px;">
+        ${phItems.map(item => {
+          const r = items.findIndex(x => x.id === item.id);
+          return `<div class="item-row"><div class="item-main"><span class="badge ${item.type === 'Cours' ? 'b-blue' : 'b-mustard'}">${item.code || item.type}</span> <strong style="margin-left:6px;">${item.title}</strong></div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            ${item.type === 'Devoir' ? `<input type="text" style="width:72px;" placeholder="Note" value="${item.note || ''}" onchange="appData.edaa.items[${r}].note=this.value;triggerSave();">` : ''}
+            <select style="width:130px;" onchange="appData.edaa.items[${r}].status=this.value;renderEdaa();triggerSave();">
+              ${['À faire','À revoir','À refaire','Validé'].map(s => `<option value="${s}" ${item.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select></div></div>`;
+        }).join('')}</div></details>`;
+    }).join('');
+  }
+  function updateEdaaField(f, v) { appData.edaa[f] = v; triggerSave(); }
+
+  function renderCom() {
+    const filter = document.getElementById('comFilter').value;
+    document.getElementById('comPostsList').innerHTML = appData.comPosts.filter(p => filter === 'Tous' || p.theme === filter).map(p => {
+      const i = appData.comPosts.findIndex(x => x.id === p.id);
+      return `<div class="item-row"><div class="item-main"><strong>${p.title}</strong><div style="margin-top:4px;"><span class="badge b-sage">${p.theme}</span> <span class="badge b-blue">${p.network}</span></div></div>
+        <select style="width:145px;" onchange="appData.comPosts[${i}].status=this.value;triggerSave();">${['Idée','Brouillon prêt','Publié'].map(s => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+        <button type="button" class="btn btn-danger" onclick="appData.comPosts.splice(${i},1);renderCom();triggerSave();">✕</button></div>`;
+    }).join('');
+  }
+  function addComPost() {
+    const title = document.getElementById('newComTitle').value.trim(); if (!title) return;
+    appData.comPosts.unshift({ id: Date.now(), title, theme: document.getElementById('newComTheme').value, network: document.getElementById('newComNetwork').value, status: document.getElementById('newComStatus').value });
+    document.getElementById('newComTitle').value = ''; renderCom(); triggerSave();
+  }
+
+  function renderWishlist() {
+    document.getElementById('wishlistContainer').innerHTML = appData.wishlist.map((w, i) => `
+      <div class="item-row ${w.done ? 'done' : ''}">
+        <input type="checkbox" ${w.done ? 'checked' : ''} onchange="appData.wishlist[${i}].done=!appData.wishlist[${i}].done;renderWishlist();triggerSave();">
+        <div class="item-main"><strong>${w.title}</strong><div class="item-sub">${w.brand}</div></div>
+        <button type="button" class="btn btn-danger" onclick="appData.wishlist.splice(${i},1);renderWishlist();triggerSave();">✕</button>
+      </div>`).join('');
+  }
+  function addWish() {
+    const title = document.getElementById('newWishTitle').value.trim(); if (!title) return;
+    appData.wishlist.push({ id: Date.now(), title, brand: document.getElementById('newWishBrand').value.trim(), done: false });
+    document.getElementById('newWishTitle').value = ''; document.getElementById('newWishBrand').value = ''; renderWishlist(); triggerSave();
+  }
+
+  function updateTextField(field, val) { appData[field] = val; triggerSave(); }
+  loadFromSupabase();
+</script>
+</body>
+</html>
